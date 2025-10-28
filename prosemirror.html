@@ -130,15 +130,15 @@
     // Start with a complete basic schema and add list support
     const baseNodes = basicSchema.spec.nodes;
     const nodesWithLists = addListNodes(baseNodes, "paragraph block*", "block");
-    
+
     // Create a complete node set ensuring doc is present and filtering out undefined
     const completeNodes = {};
-    
+
     // First, add the essential doc node
     if (baseNodes.doc) {
       completeNodes.doc = baseNodes.doc;
     }
-    
+
     // Then add all valid nodes from nodesWithLists
     Object.keys(nodesWithLists).forEach(nodeName => {
       const node = nodesWithLists[nodeName];
@@ -259,13 +259,13 @@
         console.warn(`Skipping invalid node: ${nodeName}`, node);
       }
     });
-    
+
     // Debug: verify doc node exists
     console.log('Basic schema nodes:', Object.keys(basicSchema.spec.nodes));
     console.log('Complete nodes:', Object.keys(completeNodes));
     console.log('Validated nodes:', Object.keys(validatedNodes));
     console.log('Doc node exists:', !!validatedNodes.doc);
-    
+
     const schema = new Schema({ nodes: validatedNodes, marks: tiptapMarks });
 
     const $ = (sel) => document.querySelector(sel);
@@ -311,7 +311,7 @@
           content: node.content?.map(processTiptapNode) || []
         };
       }
-      
+
       // Handle code block variations (Tiptap uses codeBlock, ProseMirror uses code_block)
       if (node.type === 'codeBlock') {
         return {
@@ -320,18 +320,18 @@
           content: node.content?.map(processTiptapNode) || []
         };
       }
-      
+
       // Handle text alignment attributes
       if (node.attrs && node.attrs.textAlign) {
         node.attrs = { ...node.attrs };
         // Convert textAlign to class for rendering
       }
-      
+
       // Recursively process content
       if (node.content) {
         node.content = node.content.map(processTiptapNode);
       }
-      
+
       return node;
     }    function jsonToHtml(json) {
       const docSpec = ensureDocNode(json);
