@@ -41,7 +41,7 @@
           template(#default)
             q-list
               q-item(
-                v-for="color in ['black', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'gray']" :key="color"
+                v-for="color in ['red', 'blue', 'green', 'yellow', 'purple', 'orange']" :key="color"
                 @click="editor?.chain().focus().setColor(color).run()"
                 clickable
                 dense
@@ -80,13 +80,13 @@
           template(#default)
             q-list
               q-item(
-                v-for="font in ['arial', 'comic-sans-ms', 'courier-new', 'georgia', 'helvetica', 'lucida-console', 'times-new-roman']" :key="font"
+                v-for="font in ['BBH Sans Bogle', 'arial', 'comic-sans-ms', 'courier-new', 'georgia', 'helvetica', 'lucida-console', 'times-new-roman']" :key="font"
                 @click="editor?.chain().focus().setFontFamily(font).run()"
                 clickable
                 dense
               )
                 q-item-section
-                  q-item-label(:class="{ 'text-primary': editor?.isActive('textStyle', font) }")
+                  q-item-label(:class="{ 'text-primary': editor?.isActive('textStyle', { fontFamily: font }) }")
                     span(:style="{ 'font-family': font.replace(/-/g, ' ') }") {{ font.replace(/-/g, ' ') }}
 
       q-btn-group.q-mx-sm(flat)
@@ -212,7 +212,6 @@ import Heading from '@tiptap/extension-heading'
 import TextAlign from '@tiptap/extension-text-align'
 import { FontFamily, TextStyle, FontSize, Color, BackgroundColor } from '@tiptap/extension-text-style'
 
-
 const controlRenderer = defineComponent({
   name: 'WysiwygControlRenderer',
   components: {
@@ -227,7 +226,7 @@ const controlRenderer = defineComponent({
       editor: ref<Editor | null>(null),
 
       baseToolbar: [
-        { type: 'separator'},
+        { type: 'separator' },
         {
           type: 'group',
           items: [
@@ -312,14 +311,14 @@ const controlRenderer = defineComponent({
               name: 'undo',
               icon: 'mdi-undo',
               command: () => this.editor?.chain().focus().undo().run(),
-              disabled: () => this.editor ? !this.editor?.can().undo() : true,
+              disabled: () => (this.editor ? !this.editor?.can().undo() : true),
             },
             {
               type: 'button',
               name: 'redo',
               icon: 'mdi-redo',
               command: () => this.editor?.chain().focus().redo().run(),
-              disabled: () =>this.editor ? !this.editor?.can().redo() : true,
+              disabled: () => (this.editor ? !this.editor?.can().redo() : true),
             },
           ],
         },
@@ -396,7 +395,8 @@ export const entry: JsonFormsRendererRegistryEntry = {
     margin: 1em 0;
   }
 }
-  .q-field--auto-height .q-field__control-container {
-    padding-top: 0 !important;
-  }
+.q-field--auto-height .q-field__control-container {
+  padding-top: 0 !important;
+}
+//@import url('https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&display=swap');
 </style>

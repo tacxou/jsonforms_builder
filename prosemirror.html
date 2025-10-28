@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiptap JSON → HTML Converter</title>
+  <style>
+    :root { --bg: #0b0c0f; --fg: #e6e6e6; --muted:#a0a4ae; --card:#151821; --accent:#7c9cff; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--fg); }
+    header { padding: 22px 20px; border-bottom: 1px solid #1e2330; background: linear-gradient(180deg,#0d1018,#0a0c13); position: sticky; top:0; z-index:1; }
+    header h1 { margin:0; font-size: 18px; letter-spacing:.2px; }
+    main { display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px; }
+    .card { background: var(--card); border:1px solid #232836; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    textarea, pre, .preview { width:100%; background:#0e121b; color: var(--fg); border:1px solid #242a38; border-radius:12px; padding:12px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    textarea { min-height: 340px; resize: vertical; }
+    pre { margin:0; white-space: pre-wrap; word-break: break-word; }
+    .preview { min-height: 340px; background:#0f1219; }
+    button { background: #1b2233; color: var(--fg); border:1px solid #2a344a; border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; }
+    button:hover { background:#222a3f; }
+    .tag { font-size: 12px; color: var(--muted); }
+    .success { color: #79ffa8; }
+    .error { color: #ff8797; white-space: pre-wrap; }
+    footer { padding: 14px 20px; color: var(--muted); }
+    @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+    /* Basic content styling for the preview */
+    .pm-content { line-height: 1.6; }
+    .pm-content h1, .pm-content h2, .pm-content h3 { margin: .6em 0 .3em; }
+    .pm-content p { margin: .5em 0; }
+    .pm-content ul, .pm-content ol { margin: .5em 0 .5em 1.25em; }
+    .pm-content blockquote { border-left: 3px solid #2f3a57; padding-left: .8em; color:#cdd2de; margin:.6em 0; }
+    .pm-content code { background:#0c1220; border:1px solid #1d2440; padding:.1em .3em; border-radius:6px; }
+    .pm-content pre { background:#0a0f1a; border:1px solid #1d2440; padding:.8em; border-radius:8px; overflow-x:auto; }
+    .pm-content a { color: var(--accent); text-decoration: none; }
+    .pm-content a:hover { text-decoration: underline; }
+    .pm-content table { border-collapse: collapse; width: 100%; margin: .6em 0; }
+    .pm-content th, .pm-content td { border: 1px solid #2a344a; padding: .4em .6em; text-align: left; }
+    .pm-content th { background: #1b2233; font-weight: 600; }
+    /* Tiptap specific styles */
+    .pm-content u { text-decoration: underline; }
+    .pm-content s, .pm-content strike { text-decoration: line-through; }
+    .pm-content sub { vertical-align: sub; font-size: smaller; }
+    .pm-content sup { vertical-align: super; font-size: smaller; }
+    .pm-content mark { background: #4a5568; color: #fff; padding: 0.1em 0.2em; border-radius: 2px; }
+    .pm-content .highlight { background: #805ad5; color: #fff; padding: 0.1em 0.2em; border-radius: 2px; }
+    .pm-content hr { border: none; border-top: 2px solid #2a344a; margin: 1.5em 0; }
+    .pm-content img { max-width: 100%; height: auto; border-radius: 4px; }
+    .pm-content iframe { max-width: 100%; border-radius: 4px; }
+    .pm-content .task-list { list-style: none; padding-left: 0; }
+    .pm-content .task-list li { display: flex; align-items: flex-start; gap: 0.5em; }
+    .pm-content .task-list input[type="checkbox"] { margin: 0; margin-top: 0.2em; }
+    .pm-content .mention { background: #2d3748; color: var(--accent); padding: 0.1em 0.3em; border-radius: 3px; }
+    .pm-content .text-align-left { text-align: left; }
+    .pm-content .text-align-center { text-align: center; }
+    .pm-content .text-align-right { text-align: right; }
+    .pm-content .text-align-justify { text-align: justify; }
+    .format-buttons { display: flex; gap: 8px; margin-top: 10px; }
+    .format-buttons button { font-size: 12px; padding: 6px 10px; }
+    .json-tools { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .json-tools button { font-size: 12px; padding: 6px 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tiptap JSON → HTML <span class="tag">(Convertisseur JSON vers HTML avec extensions Tiptap)</span></h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row" style="justify-content: space-between; align-items: baseline;">
+        <strong>Document JSON</strong>
+        <span class="tag">Collez un <code>doc</code> Tiptap/ProseMirror</span>
+      </div>
+      <textarea id="jsonInput" spellcheck="false" placeholder="Collez votre JSON Tiptap/ProseMirror ici..."></textarea>
+      <div class="json-tools">
+        <button id="formatJsonBtn" title="Formater le JSON">Formater JSON</button>
+        <button id="validateJsonBtn" title="Valider le JSON">Valider JSON</button>
+        <button id="clearJsonBtn" title="Effacer le contenu">Effacer</button>
+      </div>
+      <div class="row" style="margin-top:10px; gap:10px">
+        <button id="convertBtn">Convertir en HTML</button>
+        <button id="copyHtmlBtn">Copier le HTML</button>
+        <button id="loadExampleBtn" title="Charger un exemple Tiptap">Exemple</button>
+        <button id="loadAdvancedExampleBtn" title="Exemple avec extensions Tiptap">Exemple avancé</button>
+        <button id="autoConvertBtn" title="Conversion automatique">Auto ✓</button>
+        <span id="status" class="tag"></span>
+      </div>
+      <p id="error" class="error" style="display:none"></p>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content: space-between; align-items: baseline;">
+        <strong>Résultat</strong>
+        <span class="tag">Aperçu + source HTML</span>
+      </div>
+      <div id="preview" class="preview pm-content"></div>
+      <div class="format-buttons">
+        <button id="copyRenderedBtn">Copier le rendu</button>
+        <button id="downloadHtmlBtn">Télécharger HTML</button>
+        <button id="printBtn">Imprimer</button>
+      </div>
+      <div style="height:10px"></div>
+      <details>
+        <summary>Voir le HTML généré</summary>
+        <pre id="htmlOutput"></pre>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        Convertisseur JSON Tiptap vers HTML avec support des extensions avancées.
+        Compatible avec <code>prosemirror-model</code>, <code>tiptap</code> et leurs extensions.
+      </div>
+      <div class="tag">
+        Raccourcis : Ctrl+Enter (convertir) • Ctrl+K (effacer) • Ctrl+Shift+F (formater)
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    // Import ESM from a CDN. Versions pinned for reproducibility.
+    import {Schema, DOMSerializer, Node as PMNode} from "https://esm.sh/prosemirror-model@1.25.4";
+    import {schema as basicSchema} from "https://esm.sh/prosemirror-schema-basic@1.2.4";
+    import {addListNodes} from "https://esm.sh/prosemirror-schema-list@1.5.1";
+
+    // --- Build a Tiptap-compatible schema with extended marks and nodes ---
+    // Start with a complete basic schema and add list support
+    const baseNodes = basicSchema.spec.nodes;
+    const nodesWithLists = addListNodes(baseNodes, "paragraph block*", "block");
+    
+    // Create a complete node set ensuring doc is present and filtering out undefined
+    const completeNodes = {};
+    
+    // First, add the essential doc node
+    if (baseNodes.doc) {
+      completeNodes.doc = baseNodes.doc;
+    }
+    
+    // Then add all valid nodes from nodesWithLists
+    Object.keys(nodesWithLists).forEach(nodeName => {
+      const node = nodesWithLists[nodeName];
+      if (node && typeof node === 'object') {
+        completeNodes[nodeName] = node;
+      }
+    });
+
+    // Add Tiptap-specific marks
+    const tiptapMarks = {
+      ...basicSchema.spec.marks,
+      underline: {
+        parseDOM: [{tag: "u"}, {style: "text-decoration=underline"}],
+        toDOM() { return ["u", 0] }
+      },
+      strike: {
+        parseDOM: [{tag: "s"}, {tag: "strike"}, {style: "text-decoration=line-through"}],
+        toDOM() { return ["s", 0] }
+      },
+      subscript: {
+        parseDOM: [{tag: "sub"}],
+        toDOM() { return ["sub", 0] }
+      },
+      superscript: {
+        parseDOM: [{tag: "sup"}],
+        toDOM() { return ["sup", 0] }
+      },
+      highlight: {
+        attrs: { color: { default: null } },
+        parseDOM: [
+          {tag: "mark"},
+          {tag: "span.highlight", getAttrs: node => ({ color: node.style.backgroundColor || null })}
+        ],
+        toDOM(mark) {
+          const attrs = mark.attrs.color ? { style: `background: ${mark.attrs.color}` } : {};
+          return ["mark", attrs, 0];
+        }
+      },
+      textStyle: {
+        attrs: { color: { default: null }, fontSize: { default: null } },
+        parseDOM: [{tag: "span", getAttrs: node => {
+          const color = node.style.color;
+          const fontSize = node.style.fontSize;
+          return color || fontSize ? { color, fontSize } : false;
+        }}],
+        toDOM(mark) {
+          const style = [];
+          if (mark.attrs.color) style.push(`color: ${mark.attrs.color}`);
+          if (mark.attrs.fontSize) style.push(`font-size: ${mark.attrs.fontSize}`);
+          return style.length ? ["span", { style: style.join("; ") }, 0] : ["span", 0];
+        }
+      }
+    };
+
+    // Add Tiptap-specific nodes to the complete schema
+    const tiptapNodes = {
+      ...completeNodes,
+      // Add Tiptap's codeBlock as an alias for code_block
+      codeBlock: completeNodes.code_block || {
+        content: "text*",
+        marks: "",
+        group: "block",
+        code: true,
+        defining: true,
+        parseDOM: [{tag: "pre", preserveWhitespace: "full"}],
+        toDOM() { return ["pre", ["code", 0]] }
+      },
+      horizontalRule: {
+        group: "block",
+        parseDOM: [{tag: "hr"}],
+        toDOM() { return ["hr"] }
+      },
+      image: {
+        attrs: { src: {}, alt: { default: null }, title: { default: null } },
+        group: "inline",
+        inline: true,
+        draggable: true,
+        parseDOM: [{tag: "img[src]", getAttrs(dom) {
+          return {
+            src: dom.getAttribute("src"),
+            title: dom.getAttribute("title"),
+            alt: dom.getAttribute("alt")
+          }
+        }}],
+        toDOM(node) {
+          return ["img", node.attrs]
+        }
+      },
+      taskList: {
+        group: "block list",
+        content: "taskItem+",
+        parseDOM: [{tag: "ul.task-list", priority: 70}],
+        toDOM() { return ["ul", { class: "task-list" }, 0] }
+      },
+      taskItem: {
+        content: "paragraph block*",
+        attrs: { checked: { default: false } },
+        parseDOM: [{tag: "li", getAttrs(dom) {
+          const checkbox = dom.querySelector('input[type="checkbox"]');
+          return { checked: checkbox ? checkbox.checked : false };
+        }}],
+        toDOM(node) {
+          return ["li", [
+            "input",
+            { type: "checkbox", checked: node.attrs.checked ? "checked" : null }
+          ], ["div", 0]]
+        }
+      }
+    };
+
+    // Validate and clean up nodes before creating schema
+    const validatedNodes = {};
+    Object.keys(tiptapNodes).forEach(nodeName => {
+      const node = tiptapNodes[nodeName];
+      if (node && typeof node === 'object') {
+        validatedNodes[nodeName] = node;
+      } else {
+        console.warn(`Skipping invalid node: ${nodeName}`, node);
+      }
+    });
+    
+    // Debug: verify doc node exists
+    console.log('Basic schema nodes:', Object.keys(basicSchema.spec.nodes));
+    console.log('Complete nodes:', Object.keys(completeNodes));
+    console.log('Validated nodes:', Object.keys(validatedNodes));
+    console.log('Doc node exists:', !!validatedNodes.doc);
+    
+    const schema = new Schema({ nodes: validatedNodes, marks: tiptapMarks });
+
+    const $ = (sel) => document.querySelector(sel);
+    const jsonInput = $('#jsonInput');
+    const preview = $('#preview');
+    const htmlOutput = $('#htmlOutput');
+    const status = $('#status');
+    const errorEl = $('#error');
+
+    let autoConvert = false;
+    let convertTimeout;
+
+    function setStatus(msg, ok = true) {
+      status.textContent = msg || '';
+      status.className = ok ? 'tag success' : 'tag error';
+    }
+
+    function clearStatus() { setStatus(''); errorEl.style.display='none'; errorEl.textContent=''; }
+
+    function ensureDocNode(obj) {
+      // Accept either a full doc {type:'doc', content:[...]} or a raw content array
+      if (Array.isArray(obj)) return { type: 'doc', content: obj };
+      if (obj && obj.type === 'doc') return obj;
+      if (obj && obj.content) return { type: 'doc', content: obj.content };
+      throw new Error("JSON inattendu. Fournissez soit un nœud 'doc', soit un tableau 'content'.");
+    }
+
+    function processTiptapNode(node) {
+      // Handle Tiptap-specific node types and convert them to compatible format
+      if (node.type === 'horizontalRule') {
+        return { type: 'horizontalRule' };
+      }
+      if (node.type === 'taskList') {
+        return {
+          type: 'taskList',
+          content: node.content?.map(processTiptapNode) || []
+        };
+      }
+      if (node.type === 'taskItem') {
+        return {
+          type: 'taskItem',
+          attrs: { checked: node.attrs?.checked || false },
+          content: node.content?.map(processTiptapNode) || []
+        };
+      }
+      
+      // Handle code block variations (Tiptap uses codeBlock, ProseMirror uses code_block)
+      if (node.type === 'codeBlock') {
+        return {
+          type: 'code_block',
+          attrs: node.attrs,
+          content: node.content?.map(processTiptapNode) || []
+        };
+      }
+      
+      // Handle text alignment attributes
+      if (node.attrs && node.attrs.textAlign) {
+        node.attrs = { ...node.attrs };
+        // Convert textAlign to class for rendering
+      }
+      
+      // Recursively process content
+      if (node.content) {
+        node.content = node.content.map(processTiptapNode);
+      }
+      
+      return node;
+    }    function jsonToHtml(json) {
+      const docSpec = ensureDocNode(json);
+      // Process Tiptap-specific nodes
+      const processedDoc = {
+        ...docSpec,
+        content: docSpec.content?.map(processTiptapNode) || []
+      };
+
+      const pmDoc = PMNode.fromJSON(schema, processedDoc);
+      const serializer = DOMSerializer.fromSchema(schema);
+      const fragment = serializer.serializeFragment(pmDoc.content);
+      const wrap = document.createElement('div');
+      wrap.appendChild(fragment);
+
+      // Post-process HTML for Tiptap-specific features
+      const html = wrap.innerHTML;
+      return html
+        .replace(/class="text-align-(\w+)"/g, 'style="text-align: $1"')
+        .replace(/<p data-text-align="(\w+)">/g, '<p style="text-align: $1">');
+    }
+
+    function render(html) {
+      preview.innerHTML = html;
+      htmlOutput.textContent = html;
+    }
+
+    function convert() {
+      clearStatus();
+      try {
+        const txt = jsonInput.value.trim();
+        if (!txt) { setStatus('Collez un JSON ProseMirror puis cliquez « Convertir ».', false); return; }
+        const parsed = JSON.parse(txt);
+        const html = jsonToHtml(parsed);
+        render(html);
+        setStatus('Converti ✓', true);
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = (err && err.message) ? err.message : String(err);
+        errorEl.style.display = 'block';
+        setStatus('Erreur', false);
+      }
+    }
+
+    function copyHtml() {
+      const html = htmlOutput.textContent || '';
+      if (!html) { setStatus('Rien à copier', false); return; }
+      navigator.clipboard.writeText(html).then(() => setStatus('HTML copié ✓', true))
+        .catch(() => setStatus('Impossible de copier', false));
+    }
+
+    function formatJson() {
+      try {
+        const txt = jsonInput.value.trim();
+        if (!txt) return;
+        const parsed = JSON.parse(txt);
+        jsonInput.value = JSON.stringify(parsed, null, 2);
+        setStatus('JSON formaté ✓', true);
+      } catch (err) {
+        setStatus('JSON invalide', false);
+      }
+    }
+
+    function validateJson() {
+      try {
+        const txt = jsonInput.value.trim();
+        if (!txt) { setStatus('Aucun contenu à valider', false); return; }
+        JSON.parse(txt);
+        setStatus('JSON valide ✓', true);
+      } catch (err) {
+        setStatus('JSON invalide', false);
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function clearJson() {
+      jsonInput.value = '';
+      preview.innerHTML = '';
+      htmlOutput.textContent = '';
+      clearStatus();
+    }
+
+    function toggleAutoConvert() {
+      autoConvert = !autoConvert;
+      const btn = $('#autoConvertBtn');
+      btn.textContent = autoConvert ? 'Auto ✓' : 'Auto ✗';
+      btn.style.background = autoConvert ? '#1f4a2e' : '#1b2233';
+      if (autoConvert) {
+        setStatus('Conversion automatique activée', true);
+      }
+    }
+
+    function autoConvertIfEnabled() {
+      if (!autoConvert) return;
+      clearTimeout(convertTimeout);
+      convertTimeout = setTimeout(convert, 500); // Délai de 500ms
+    }
+
+    function copyRendered() {
+      const content = preview.textContent || '';
+      if (!content) { setStatus('Rien à copier', false); return; }
+      navigator.clipboard.writeText(content).then(() => setStatus('Contenu copié ✓', true))
+        .catch(() => setStatus('Impossible de copier', false));
+    }
+
+    function downloadHtml() {
+      const html = htmlOutput.textContent || '';
+      if (!html) { setStatus('Rien à télécharger', false); return; }
+
+      const fullHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Document Tiptap</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1, h2, h3 { margin: .6em 0 .3em; }
+    p { margin: .5em 0; }
+    ul, ol { margin: .5em 0 .5em 1.25em; }
+    blockquote { border-left: 3px solid #ddd; padding-left: .8em; color: #666; margin: .6em 0; }
+    code { background: #f5f5f5; padding: .1em .3em; border-radius: 3px; }
+    pre { background: #f5f5f5; padding: .8em; border-radius: 5px; overflow-x: auto; }
+    u { text-decoration: underline; }
+    s, strike { text-decoration: line-through; }
+    sub { vertical-align: sub; font-size: smaller; }
+    sup { vertical-align: super; font-size: smaller; }
+    mark { background: #ffeb3b; padding: 0.1em 0.2em; border-radius: 2px; }
+    hr { border: none; border-top: 2px solid #ddd; margin: 1.5em 0; }
+    img { max-width: 100%; height: auto; border-radius: 4px; }
+    .task-list { list-style: none; padding-left: 0; }
+    .task-list li { display: flex; align-items: flex-start; gap: 0.5em; }
+    .task-list input[type="checkbox"] { margin: 0; margin-top: 0.2em; }
+  </style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+
+      const blob = new Blob([fullHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prosemirror-document.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus('HTML téléchargé ✓', true);
+    }
+
+    function printDocument() {
+      const html = htmlOutput.textContent || '';
+      if (!html) { setStatus('Rien à imprimer', false); return; }
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Document Tiptap</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+            h1, h2, h3 { margin: .6em 0 .3em; }
+            p { margin: .5em 0; }
+            ul, ol { margin: .5em 0 .5em 1.25em; }
+            blockquote { border-left: 3px solid #ddd; padding-left: .8em; color: #666; margin: .6em 0; }
+            code { background: #f5f5f5; padding: .1em .3em; border-radius: 3px; }
+            pre { background: #f5f5f5; padding: .8em; border-radius: 5px; overflow-x: auto; }
+            u { text-decoration: underline; }
+            s, strike { text-decoration: line-through; }
+            sub { vertical-align: sub; font-size: smaller; }
+            sup { vertical-align: super; font-size: smaller; }
+            mark { background: #ffeb3b; padding: 0.1em 0.2em; border-radius: 2px; }
+            hr { border: none; border-top: 2px solid #ddd; margin: 1.5em 0; }
+            img { max-width: 100%; height: auto; border-radius: 4px; }
+            .task-list { list-style: none; padding-left: 0; }
+            .task-list li { display: flex; align-items: flex-start; gap: 0.5em; }
+            .task-list input[type="checkbox"] { margin: 0; margin-top: 0.2em; }
+          </style>
+        </head>
+        <body>${html}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function loadExample() {
+      const example = {
+        type: 'doc',
+        content: [
+          { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Exemple de Document Tiptap' }] },
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Ceci est un ' },
+              { type: 'text', marks: [{ type: 'strong' }], text: 'exemple' },
+              { type: 'text', text: ' avec du ' },
+              { type: 'text', marks: [{ type: 'em' }], text: 'texte en italique' },
+              { type: 'text', text: ', du ' },
+              { type: 'text', marks: [{ type: 'underline' }], text: 'texte souligné' },
+              { type: 'text', text: ' et du ' },
+              { type: 'text', marks: [{ type: 'code' }], text: 'code inline' },
+              { type: 'text', text: '.' }
+            ] },
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Listes' }] },
+          { type: 'bullet_list', content: [
+              { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Premier élément de la liste' }] }] },
+              { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Deuxième élément' }] }] },
+              { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Troisième élément avec ', marks: [] }, { type: 'text', marks: [{ type: 'strong' }], text: 'texte en gras' }] }] }
+            ] },
+          { type: 'ordered_list', attrs: { order: 1 }, content: [
+              { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Premier élément numéroté' }] }] },
+              { type: 'list_item', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Deuxième élément numéroté' }] }] }
+            ] },
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Citation' }] },
+          { type: 'blockquote', content: [
+              { type: 'paragraph', content: [ { type: 'text', text: 'Ceci est une citation importante qui démontre les capacités de formatage de Tiptap.' } ] }
+            ] },
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Voici du code en bloc :' }
+            ] },
+          { type: 'code_block', content: [
+              { type: 'text', text: 'function convertJsonToHtml(json) {\n  return tiptap.serialize(json);\n}' }
+            ] },
+          { type: 'paragraph', content: [ { type: 'text', text: 'Fin de l\'exemple.' } ] }
+        ]
+      };
+      jsonInput.value = JSON.stringify(example, null, 2);
+      convert();
+    }
+
+    function loadAdvancedExample() {
+      const advancedExample = {
+        type: 'doc',
+        content: [
+          { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Exemple Avancé Tiptap' }] },
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Ce document démontre les fonctionnalités avancées de ' },
+              { type: 'text', marks: [{ type: 'strong' }], text: 'Tiptap' },
+              { type: 'text', text: ' avec différents types de formatage.' }
+            ] },
+
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Formatage de texte avancé' }] },
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Voici du texte avec ' },
+              { type: 'text', marks: [{ type: 'underline' }], text: 'soulignement' },
+              { type: 'text', text: ', du ' },
+              { type: 'text', marks: [{ type: 'strike' }], text: 'texte barré' },
+              { type: 'text', text: ', des ' },
+              { type: 'text', marks: [{ type: 'subscript' }], text: 'indices' },
+              { type: 'text', text: ' et des ' },
+              { type: 'text', marks: [{ type: 'superscript' }], text: 'exposants' },
+              { type: 'text', text: '.' }
+            ] },
+
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Texte avec ' },
+              { type: 'text', marks: [{ type: 'highlight', attrs: { color: '#ffeb3b' } }], text: 'surlignage jaune' },
+              { type: 'text', text: ' et ' },
+              { type: 'text', marks: [{ type: 'textStyle', attrs: { color: '#e53e3e' } }], text: 'couleur rouge' },
+              { type: 'text', text: '.' }
+            ] },
+
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Séparateur' }] },
+          { type: 'horizontalRule' },
+
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Liste de tâches' }] },
+          { type: 'taskList', content: [
+              { type: 'taskItem', attrs: { checked: true }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Tâche terminée' }] }] },
+              { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Tâche en cours' }] }] },
+              { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Tâche à faire' }] }] }
+            ] },
+
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Alignement du texte' }] },
+          { type: 'paragraph', attrs: { textAlign: 'left' }, content: [{ type: 'text', text: 'Texte aligné à gauche' }] },
+          { type: 'paragraph', attrs: { textAlign: 'center' }, content: [{ type: 'text', text: 'Texte centré' }] },
+          { type: 'paragraph', attrs: { textAlign: 'right' }, content: [{ type: 'text', text: 'Texte aligné à droite' }] },
+
+          { type: 'paragraph', content: [
+              { type: 'text', text: 'Cet exemple montre la richesse des fonctionnalités Tiptap !' }
+            ] }
+        ]
+      };
+      jsonInput.value = JSON.stringify(advancedExample, null, 2);
+      convert();
+    }
+
+    // Wire UI
+    document.getElementById('convertBtn').addEventListener('click', convert);
+    document.getElementById('copyHtmlBtn').addEventListener('click', copyHtml);
+    document.getElementById('loadExampleBtn').addEventListener('click', loadExample);
+    document.getElementById('loadAdvancedExampleBtn').addEventListener('click', loadAdvancedExample);
+    document.getElementById('formatJsonBtn').addEventListener('click', formatJson);
+    document.getElementById('validateJsonBtn').addEventListener('click', validateJson);
+    document.getElementById('clearJsonBtn').addEventListener('click', clearJson);
+    document.getElementById('autoConvertBtn').addEventListener('click', toggleAutoConvert);
+    document.getElementById('copyRenderedBtn').addEventListener('click', copyRendered);
+    document.getElementById('downloadHtmlBtn').addEventListener('click', downloadHtml);
+    document.getElementById('printBtn').addEventListener('click', printDocument);
+
+    // Auto-convert on input change
+    jsonInput.addEventListener('input', autoConvertIfEnabled);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'Enter':
+            e.preventDefault();
+            convert();
+            break;
+          case 'k':
+            e.preventDefault();
+            clearJson();
+            break;
+          case 'f':
+            if (e.shiftKey) {
+              e.preventDefault();
+              formatJson();
+            }
+            break;
+        }
+      }
+    });
+
+    // Optional: preload example
+    loadExample();
+  </script>
+</body>
+</html>

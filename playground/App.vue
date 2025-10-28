@@ -51,6 +51,9 @@ export default defineComponent({
     LayoutDefaultFooter,
   },
   data() {
+    const exampleData = window.localStorage.getItem('form-data')
+    const data = exampleData ? JSON.parse(exampleData) : {}
+
     const additionalErrors: ErrorObject[] = []
     return {
       data: {},
@@ -132,6 +135,7 @@ export default defineComponent({
   methods: {
     onChange(event: JsonFormsChangeEvent) {
       console.log('ev', event)
+      window.localStorage.setItem('form-data', JSON.stringify(event.data))
       this.data = event.data
     },
   },
