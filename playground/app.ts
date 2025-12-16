@@ -1,4 +1,4 @@
-import '../examples'
+import './examples'
 import 'quasar/src/css/index.sass'
 import '@quasar/extras/mdi-v7/mdi-v7.css'
 import langFr from 'quasar/lang/fr'

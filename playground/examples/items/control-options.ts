@@ -27,6 +27,10 @@ import { registerExamples } from '../register';
 export const schema = {
   type: 'object',
   properties: {
+    addressSearch: {
+      type: 'string',
+      description: 'Recherche d\'adresse via API (autocomplete)',
+    },
     string: {
       type: 'string',
     },
@@ -65,6 +69,31 @@ export const uischema = {
   elements: [
     {
       type: 'Control',
+      scope: '#/properties/addressSearch',
+      options: {
+        placeholder: 'Rechercher une adresse…',
+        minLength: 3,
+        api: {
+          base: 'https://data.geopf.fr',
+          url: '/geocodage/search',
+          queryKey: 'q',
+          params: {
+            autocomplete: 1,
+            index: 'address',
+            limit: 10,
+            returntruegeometry: false,
+          },
+          itemsPath: 'features',
+          labelKey: 'properties.label',
+          valueKey: 'properties.id',
+          headers: {
+            accept: 'application/json',
+          },
+        },
+      },
+    },
+    {
+      type: 'Control',
       scope: '#/properties/string',
     },
     {
@@ -99,6 +128,7 @@ export const uischema = {
 };
 
 export const data = {
+  addressSearch: null,
   string: 'This is a string',
   boolean: true,
   number: 50.5,
