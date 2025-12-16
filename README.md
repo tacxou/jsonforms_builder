@@ -1,5 +1,7 @@
 # @tacxou/jsonforms_builder
 
+![JSONForms Builder banner](static/banner.jpg)
+
 Form Builder pour JSONForms utilisant le Framework Quasar.
 
 ## Prérequis
