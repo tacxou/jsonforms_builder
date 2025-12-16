@@ -91,13 +91,16 @@ import {
   isDateTimeControl,
   isTimeControl,
 } from '@jsonforms/core'
-dayjs.extend(customParseFormat)
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue } from '../utils'
-import { QInput, QPopupProxy } from 'quasar'
+import { QInput } from 'quasar'
 import { useDateControl } from '../composables'
+
+dayjs.extend(customParseFormat)
 
 const controlRenderer = defineComponent({
   name: 'DateControlRenderer',
