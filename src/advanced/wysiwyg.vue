@@ -415,27 +415,32 @@ export const entry: JsonFormsRendererRegistryEntry = {
 }
 </script>
 
-<style lang="scss">
-.q-custom {
+<style lang="scss" scoped>
+:deep(.q-custom) {
   .q-field__native,
   .q-field__control {
     padding: 0;
   }
+
   .q-field__control {
     border-radius: 0 0 0.75rem 0.75rem;
   }
+
   .tiptap.ProseMirror {
     height: 100%;
     padding: 10px;
   }
+
   .ProseMirror-focused {
     outline: inherit;
   }
+
   .tiptap p {
     margin: 1em 0;
   }
 }
-.q-field--auto-height .q-field__control-container {
+
+:deep(.q-field--auto-height .q-field__control-container) {
   padding-top: 0 !important;
 }
 </style>
