@@ -423,12 +423,12 @@ export const entry: JsonFormsRendererRegistryEntry = {
   }
 
   .q-field__control {
-    border-radius: 0 0 0.75rem 0.75rem;
+    border-radius: 0 0 0.25rem 0.25rem;
   }
 
   .tiptap.ProseMirror {
     height: 100%;
-    padding: 10px;
+    padding: 5px 15px;
   }
 
   .ProseMirror-focused {

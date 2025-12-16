@@ -57,9 +57,9 @@ import {
 import { defineComponent } from 'vue'
 import { rendererProps, RendererProps, useJsonFormsEnumControl } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { determineClearValue, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { QInput } from 'quasar'
-import { get, isArray, isEmpty, isString } from 'radash'
+import { useEnumSuggestionControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'EnumAndSuggestionControlRenderer',
@@ -71,48 +71,13 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
+    const jsonFormsControl = useJsonFormsEnumControl(props)
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value: any) => (isEmpty(value) ? clearValue : value)
-    const input = useQuasarControl(useJsonFormsEnumControl(props), adaptTarget, 100)
 
-    const isArrayControl =
-      input.control.value.schema?.type === 'array' ||
-      (isArray(input.control.value.schema?.type) && input.control.value.schema?.type.includes('array'))
-
-    return {
-      ...input,
-      adaptTarget,
-      isArrayControl,
-    }
-  },
-  computed: {
-    suggestions(): string[] | undefined {
-      const suggestions = this.control.uischema.options?.suggestion
-
-      if (!suggestions) {
-        return undefined
-      }
-
-      if (!isArray(suggestions)) {
-        console.warn('Suggestions must be an array')
-        return undefined
-      }
-
-      const validSuggestions = suggestions
-        .filter((suggestion) => {
-          if (isString(suggestion)) {
-            return true
-          }
-          if (suggestion != null && typeof suggestion.toString === 'function') {
-            return true
-          }
-          console.warn('Invalid suggestion item:', suggestion)
-          return false
-        })
-        .map((suggestion) => (isString(suggestion) ? suggestion : suggestion.toString()))
-
-      return !isEmpty(validSuggestions) ? validSuggestions : undefined
-    },
+    return useEnumSuggestionControl({
+      jsonFormsControl,
+      clearValue,
+    })
   },
 })
 

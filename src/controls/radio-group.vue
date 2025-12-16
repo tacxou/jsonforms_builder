@@ -18,6 +18,7 @@
       :hide-hint="persistentHint()"
       :error="control.errors !== ''"
       :error-message="control.errors"
+      :disable="disable"
       borderless
       hide-bottom-space
       stack-label
@@ -30,9 +31,9 @@
         @focus="isFocused = true"
         @blur="isFocused = false"
         :id="control.id + '_q-option-group'"
-        :model-value="control.data"
+        :model-value="modelValue"
         :class="styles.control.input"
-        :disable="!control.enabled"
+        :disable="disable"
         :options="control.options"
         inline
         dense
@@ -43,10 +44,10 @@
 import { and, ControlElement, isEnumControl, JsonFormsRendererRegistryEntry, optionIs, rankWith } from '@jsonforms/core'
 import { rendererProps, RendererProps, useJsonFormsEnumControl } from '@jsonforms/vue'
 import { QInput } from 'quasar'
-import { isEmpty } from 'radash'
 import { defineComponent } from 'vue'
-import { determineClearValue, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { ControlWrapper } from '../common'
+import { useRadioGroupControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'RadioGroupControlRenderer',
@@ -58,14 +59,13 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
+    const jsonFormsControl = useJsonFormsEnumControl(props)
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
-    const input = useQuasarControl(useJsonFormsEnumControl(props), adaptTarget, 100)
 
-    return {
-      ...input,
-      adaptTarget,
-    }
+    return useRadioGroupControl({
+      jsonFormsControl,
+      clearValue,
+    })
   },
 })
 

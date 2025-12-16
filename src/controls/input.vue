@@ -11,7 +11,7 @@
       @update:model-value="onChange"
       @focus="isFocused = true"
       @blur="isFocused = false"
-      :model-value="control.data"
+      :model-value="modelValue"
       :id="control.id + '-input'"
       :label="computedLabel"
       :class="styles.control.input"
@@ -26,8 +26,8 @@
       :error="control.errors !== ''"
       :error-message="control.errors"
       :hide-bottom-space="!!control.description"
-      :maxlength="appliedOptions.restrict ? control.schema.maxLength : undefined"
-      :counter="appliedOptions.restrict"
+      :maxlength="maxLength"
+      :counter="counter"
       :clearable="isClearable"
       :debounce="100"
       outlined
@@ -41,12 +41,12 @@ import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isStringContr
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { determineClearValue, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { QInput } from 'quasar'
-import { isEmpty } from 'radash'
+import { useStringControl } from '../composables'
 
 const controlRenderer = defineComponent({
-  name: 'StringControlRenderer',
+  name: 'InputControlRenderer',
   components: {
     ControlWrapper,
     QInput,
@@ -55,14 +55,14 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
+    const jsonFormsControl = useJsonFormsControl(props)
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
-    const input = useQuasarControl(useJsonFormsControl(props), adaptTarget, 100)
 
-    return {
-      ...input,
-      adaptTarget,
-    }
+    return useStringControl({
+      jsonFormsControl,
+      clearValue,
+      debounceWait: 100,
+    })
   },
 })
 

@@ -45,12 +45,12 @@ import {
   or,
   isNumberControl,
 } from '@jsonforms/core'
-import { defineComponent, ref } from 'vue'
+import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { determineClearValue, Options, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { QInput } from 'quasar'
-import { isEmpty } from 'radash'
+import { useNumericControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'NumericControlRenderer',
@@ -62,51 +62,14 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
+    const jsonFormsControl = useJsonFormsControl(props)
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value: any) => (isEmpty(value) ? clearValue : Number(value))
-    const input = useQuasarControl(useJsonFormsControl(props), adaptTarget)
+    const input = useNumericControl({
+      jsonFormsControl,
+      clearValue,
+    })
 
-    return {
-      ...input,
-      adaptTarget,
-    }
-  },
-  computed: {
-    step(): number {
-      const defaultStep = this.control.schema.type === 'integer' ? 1 : 0.1
-      const options: Options = this.appliedOptions
-
-      return options.step ?? defaultStep
-    },
-    precision(): number | undefined {
-      if (!this.step || Number.isInteger(this.step)) return undefined
-
-      const stepStr = this.step.toString()
-
-      if (stepStr.indexOf('e-') > -1) {
-        return parseInt(stepStr.split('e-')[1], 10)
-      }
-
-      const fraction = stepStr.split('.')[1]
-
-      return fraction ? fraction.length : undefined
-    },
-    formattedValue(): string | number {
-      if (this.control.data == null || this.control.data === '') {
-        return this.control.data
-      }
-
-      const num = Number(this.control.data)
-      if (isNaN(num)) {
-        return this.control.data
-      }
-
-      if (this.precision !== undefined) {
-        return num.toFixed(this.precision)
-      }
-
-      return this.control.data
-    },
+    return input
   },
 })
 

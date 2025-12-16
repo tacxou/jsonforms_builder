@@ -12,10 +12,10 @@
       @blur="isFocused = false"
       :type="passwordVisible ? 'text' : 'password'"
       :id="control.id + '-input'"
-      :model-value="control.data"
+      :model-value="modelValue"
       :label="computedLabel"
       :class="styles.control.input"
-      :disable="!control.enabled"
+      :disable="!control.enabled && !isReadonly"
       :placeholder="appliedOptions.placeholder"
       :autofocus="appliedOptions.focus"
       :required="control.required"
@@ -24,7 +24,8 @@
       :error="control.errors !== ''"
       :hide-bottom-space="!!control.description"
       :error-message="control.errors"
-      :maxlength="appliedOptions.restrict ? control.schema.maxLength : undefined"
+      :maxlength="maxLength"
+      :counter="counter"
       :clearable="isClearable"
       :debounce="100"
       outlined
@@ -49,12 +50,12 @@ import {
   and,
   formatIs,
 } from '@jsonforms/core'
-import { defineComponent, ref } from 'vue'
+import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { determineClearValue, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { QInput } from 'quasar'
-import { isEmpty } from 'radash'
+import { usePasswordControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'PasswordControlRenderer',
@@ -66,18 +67,14 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
-    const passwordVisible = ref(false)
+    const jsonFormsControl = useJsonFormsControl(props)
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
-    const input = useQuasarControl(useJsonFormsControl(props), adaptTarget, 100)
 
-    console.log('PasswordControlRenderer options', input.appliedOptions)
-
-    return {
-      ...input,
-      adaptTarget,
-      passwordVisible,
-    }
+    return usePasswordControl({
+      jsonFormsControl,
+      clearValue,
+      debounceWait: 100,
+    })
   },
 })
 

@@ -58,6 +58,15 @@ export const i18n = {
       label: 'Nom',
       description: 'Veuillez entrer votre nom',
     },
+    nationality: {
+      label: 'Nationalité',
+      description: 'Veuillez sélectionner votre nationalité',
+    },
+    vegetarian: {
+      label: 'Végétarien',
+      description: 'Cochez si vous êtes végétarien',
+    },
+    additionalInformationLabel: 'Informations supplémentaires',
     basicInfoGroup: 'Informations de base',
   },
   en: {

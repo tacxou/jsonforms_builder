@@ -10,16 +10,15 @@
       v-bind="quasarProps('q-field')"
       @update:model-value="onChange"
       :id="control.id + '-input'"
-      :model-value="control.data"
+      :model-value="modelValue"
       :label="computedLabel"
       :class="styles.control.input"
-      :disable="!control.enabled"
+      :disable="!control.enabled && !isReadonly"
       :hint="control.description"
       :hide-hint="persistentHint()"
       :error="control.errors !== ''"
       :error-message="control.errors"
       :hide-bottom-space="!!control.description"
-      :maxlength="appliedOptions.restrict ? control.schema.maxLength : undefined"
       :debounce="100"
       outlined
       stack-label
@@ -31,10 +30,10 @@
           @update:model-value="onChange"
           @focus="isFocused = true"
           @blur="isFocused = false"
-          :model-value="control.data"
-          :min="control.schema.minimum"
-          :max="control.schema.maximum"
-          :step="control.schema.multipleOf || 1"
+          :model-value="modelValue"
+          :min="min"
+          :max="max"
+          :step="step"
           label
           label-always
           dense
@@ -46,8 +45,9 @@ import { isRangeControl, JsonFormsRendererRegistryEntry, rankWith, type ControlE
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, type RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { determineClearValue, useQuasarControl } from '../utils'
+import { determineClearValue } from '../utils'
 import { QSlider } from 'quasar'
+import { useSliderControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'slider-control-renderer',
@@ -59,14 +59,13 @@ const controlRenderer = defineComponent({
     ...rendererProps<ControlElement>(),
   },
   setup(props: RendererProps<ControlElement>) {
-    const clearValue = determineClearValue(0)
-    const adaptTarget = (value: any) => (value === null ? clearValue : Number(value))
-    const input = useQuasarControl(useJsonFormsControl(props), adaptTarget)
+    const jsonFormsControl = useJsonFormsControl(props)
+    const clearValue = determineClearValue(0) as number
 
-    return {
-      ...input,
-      adaptTarget,
-    }
+    return useSliderControl({
+      jsonFormsControl,
+      clearValue,
+    })
   },
 })
 

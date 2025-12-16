@@ -120,7 +120,9 @@ export const useQuasarControl = <
     label: string
     description: string
     required: boolean
+    enabled: boolean
     errors: string
+    data: any
     id: string
     visible: boolean
   },

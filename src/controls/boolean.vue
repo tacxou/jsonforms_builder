@@ -17,6 +17,7 @@
       :hide-hint="persistentHint()"
       :error="control.errors !== ''"
       :error-message="control.errors"
+      :disable="disable"
       borderless
       hide-bottom-space
       stack-label
@@ -26,9 +27,9 @@
         v-bind="quasarProps('q-checkbox')"
         @update:model-value="onChange"
         :id="control.key + '_checkbox'"
-        :model-value="control.data"
+        :model-value="modelValue"
         :label="controlWrapper.label"
-        :disable="!control.enabled"
+        :disable="disable"
         :error="control.errors !== ''"
         :error-message="control.errors"
       )
@@ -39,7 +40,7 @@ import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isBooleanCont
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
-import { useQuasarControl } from '../utils'
+import { useBooleanControl } from '../composables'
 
 /**
  * BooleanControlRenderer Component
@@ -83,11 +84,11 @@ const controlRenderer = defineComponent({
    * @returns Combined functionality from useQuasarControl and useJsonFormsControl hooks
    */
   setup(props: RendererProps<ControlElement>) {
-    const input = useQuasarControl(useJsonFormsControl(props))
+    const jsonFormsControl = useJsonFormsControl(props)
 
-    return {
-      ...input,
-    }
+    return useBooleanControl({
+      jsonFormsControl,
+    })
   },
 })
 
