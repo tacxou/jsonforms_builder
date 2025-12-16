@@ -4,7 +4,11 @@ permissions:
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - 'fix*'
+      - 'feat*'
+      - 'feature*'
   pull_request:
     branches: [main]
 
@@ -35,7 +39,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: The-Software-Compagny/parser_ldap_rfc4512
+          slug: tacxou/jsonforms_builder
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
