@@ -74,6 +74,9 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(4, isRangeControl),
+  // prettier-ignore
+  tester: rankWith(4,
+    isRangeControl,
+  ), // Matches schema properties with type "number" or "integer" and with "range" option set to true
 }
 </script>

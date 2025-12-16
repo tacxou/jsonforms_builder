@@ -98,8 +98,3 @@ export const entry: JsonFormsRendererRegistryEntry = {
   tester: rankWith(1, isLayout), // Matches UI elements with layout types (VerticalLayout/HorizontalLayout)
 }
 </script>
-
-<style>
-.q-custom {
-}
-</style>

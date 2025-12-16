@@ -11,7 +11,7 @@
       @update:model-value="onChange"
       @focus="isFocused = true"
       @blur="isFocused = false"
-      :id="control.id + '-input'"
+      :id="control.id"
       :model-value="control.data"
       :label="computedLabel"
       :class="styles.control.input"
@@ -28,12 +28,18 @@
       :hide-hint="persistentHint()"
       :error="control.errors !== ''"
       :error-message="control.errors"
+      :multiple="isArrayControl"
       :clearable="isClearable"
       :debounce="100"
       emit-value
       outlined
+      stack-label
       dense
     )
+    template(#no-option)
+      q-item
+        q-item-section
+          q-item-label Aucun résultat
 </template>
 
 <script lang="ts">
@@ -46,16 +52,17 @@ import {
   hasOption,
   or,
   isEnumControl,
+  isPrimitiveArrayControl,
 } from '@jsonforms/core'
 import { defineComponent } from 'vue'
 import { rendererProps, RendererProps, useJsonFormsEnumControl } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue, useQuasarControl } from '../utils'
 import { QInput } from 'quasar'
-import { isArray, isEmpty, isString } from 'radash'
+import { get, isArray, isEmpty, isString } from 'radash'
 
 const controlRenderer = defineComponent({
-  name: 'SuggestionControlRenderer',
+  name: 'EnumAndSuggestionControlRenderer',
   components: {
     ControlWrapper,
     QInput,
@@ -65,12 +72,17 @@ const controlRenderer = defineComponent({
   },
   setup(props: RendererProps<ControlElement>) {
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
+    const adaptTarget = (value: any) => (isEmpty(value) ? clearValue : value)
     const input = useQuasarControl(useJsonFormsEnumControl(props), adaptTarget, 100)
+
+    const isArrayControl =
+      input.control.value.schema?.type === 'array' ||
+      (isArray(input.control.value.schema?.type) && input.control.value.schema?.type.includes('array'))
 
     return {
       ...input,
       adaptTarget,
+      isArrayControl,
     }
   },
   computed: {
@@ -108,6 +120,16 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(2, and(isStringControl, or(hasOption('suggestion'), isEnumControl))),
+  // prettier-ignore
+  tester: rankWith(2, and(
+    or(
+      isStringControl,
+      isPrimitiveArrayControl,
+    ),
+    or(
+      hasOption('suggestion'),
+      isEnumControl,
+    ),
+  )),
 }
 </script>

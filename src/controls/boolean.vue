@@ -101,7 +101,10 @@ export default controlRenderer
  */
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(1, isBooleanControl), // Matches schema properties with type "boolean"
+  // prettier-ignore
+  tester: rankWith(1,
+    isBooleanControl,
+  ), // Matches schema properties with type "boolean"
 }
 </script>
 

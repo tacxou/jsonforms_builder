@@ -114,7 +114,12 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(1, or(isIntegerControl, isNumberControl)),
+  // prettier-ignore
+  tester: rankWith(1,
+    or(isIntegerControl,
+      isNumberControl,
+    ),
+  ), // Matches schema properties with type "number" or "integer"
 }
 </script>
 

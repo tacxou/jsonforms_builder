@@ -7,7 +7,6 @@
     v-model:is-hovered="isHovered"
   )
     q-input(
-      v-bind="quasarProps('q-input')"
       @update:model-value="onChange"
       @focus="isFocused = true"
       @blur="isFocused = false"
@@ -31,6 +30,8 @@
       outlined
       stack-label
       dense
+
+      v-bind="{...quasarProps('q-input'), ...appliedOptions.props}"
     )
       template(#append)
         q-icon.cursor-pointer(
@@ -70,6 +71,8 @@ const controlRenderer = defineComponent({
     const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
     const input = useQuasarControl(useJsonFormsControl(props), adaptTarget, 100)
 
+    console.log('PasswordControlRenderer options', input.appliedOptions)
+
     return {
       ...input,
       adaptTarget,
@@ -82,6 +85,12 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(2, and(isStringControl, formatIs('password'))),
+  // prettier-ignore
+  tester: rankWith(2,
+    and(
+      isStringControl,
+      formatIs('password'),
+    ),
+  ), // Matches schema properties with format "password"
 }
 </script>

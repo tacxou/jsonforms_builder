@@ -70,6 +70,9 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(1, isStringControl),
+  // prettier-ignore
+  tester: rankWith(1,
+    isStringControl,
+  ), // Matches schema properties with type "string"
 }
 </script>

@@ -7,7 +7,6 @@ import merge from 'lodash/merge'
 import { computed, ComputedRef, inject, ref } from 'vue'
 import { useStyles } from '../styles'
 import { IsDynamicPropertyContext } from './inject'
-import { replace } from 'radash'
 
 /**
  * Vérifie si un champ est en lecture seule en tenant compte de la compatibilité
@@ -32,7 +31,7 @@ const isFieldReadonly = (schema: JsonSchema, uischema: any): boolean => {
 export const useControlAppliedOptions = <
   T extends { config: any; uischema: UISchemaElement },
   I extends {
-    control: ComputedRef<T>;
+    control: ComputedRef<T>,
   },
 >(
   input: I,
@@ -49,7 +48,7 @@ export const useControlAppliedOptions = <
 export const useLayoutAppliedOptions = <
   T extends { config: any; uischema: UISchemaElement },
   I extends {
-    layout: ComputedRef<T>;
+    layout: ComputedRef<T>,
   },
 >(
   input: I,
@@ -99,10 +98,11 @@ export const useQuasarLabel = <
     ),
   )
   const quasarProps = (path: string) => {
-    const props = get(appliedOptions.value?.quasar, path);
+    const props = get(appliedOptions.value, path)
 
-    return props && isPlainObject(props) ? props : {};
+    return props && isPlainObject(props) ? props : {}
   }
+
   return {
     ...input,
     appliedOptions,
@@ -195,7 +195,7 @@ export const useQuasarControl = <
   const styles = useStyles(input?.control?.value?.uischema)
 
   const quasarProps = (path: string) => {
-    const props = get(appliedOptions.value?.quasar, path)
+    const props = get(appliedOptions.value, path)
 
     return props && isPlainObject(props) ? props : {}
   }
@@ -216,7 +216,7 @@ export const useQuasarControl = <
 
     return isFieldReadonly(
       input.control.value?.schema,
-      input.control.value?.uischema
+      input.control.value?.uischema,
     )
   })
 
@@ -246,8 +246,8 @@ export const useQuasarLayout = <I extends { layout: any }>(input: I) => {
     merge(
       {},
       structuredClone(input.layout.value.config),
-      structuredClone(input.layout.value.uischema.options)
-    )
+      structuredClone(input.layout.value.uischema.options),
+    ),
   )
 
   return {
@@ -262,9 +262,10 @@ export const useVanillaLabel = <I extends { label: any }>(input: I) => {
     merge(
       {},
       cloneDeep(input.label.value.config),
-      cloneDeep(input.label.value.uischema.options)
+      cloneDeep(input.label.value.uischema.options),
     )
-  );
+  )
+
   return {
     ...input,
     styles: useStyles(input.label.value.uischema),
@@ -277,7 +278,7 @@ export const useJsonForms = () => {
 
   if (!jsonforms) {
     throw new Error(
-      "'jsonforms couldn't be injected. Are you within JSON Forms?",
+      "jsonforms couldn't be injected. Are you within JSON Forms?",
     )
   }
 
@@ -286,13 +287,11 @@ export const useJsonForms = () => {
 
 export const determineClearValue = (defaultValue: any) => {
   const jsonforms = useJsonForms()
-
   const useDefaultValue = inject<boolean>(
     IsDynamicPropertyContext,
     jsonforms.core?.schema.type !== 'object',
   )
 
-  // undefined will clear the property from the object
   return useDefaultValue ? defaultValue : undefined
 }
 

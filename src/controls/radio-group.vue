@@ -73,7 +73,13 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(20, and(isEnumControl, optionIs('format', 'radio'))),
+  // prettier-ignore
+  tester: rankWith(20,
+    and(
+      isEnumControl,
+      optionIs('format', 'radio'),
+    ),
+  ), // Matches enum controls with option format set to 'radio'
 }
 </script>
 

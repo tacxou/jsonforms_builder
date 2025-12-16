@@ -69,6 +69,9 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(1, isDateTimeControl),
+  // prettier-ignore
+  tester: rankWith(1,
+    isDateTimeControl,
+  ), // Matches schema properties with format "date-time"
 }
 </script>

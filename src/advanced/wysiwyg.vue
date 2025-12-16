@@ -9,6 +9,28 @@
     q-bar.q-pr-none(bordered)
       q-toolbar-title(v-text='controlWrapper.label')
       q-btn-group.q-mx-sm(flat)
+        template(v-for="item in topToolbar" :key="item.name")
+          q-separator(v-if="item.type === 'separator'" vertical)
+          q-btn-group.q-mx-sm(v-else-if="item.type === 'group'" flat)
+            q-btn(
+              v-for="subItem in item.items" :key="subItem.name"
+              :icon="subItem.icon"
+              @click="subItem.command()"
+              :class="{ 'text-primary': editor?.isActive(subItem.name) }"
+              :disabled="subItem?.disabled ? subItem?.disabled() : false"
+              dense
+            )
+          q-btn-group.q-mx-sm(v-else-if="item.type === 'button'" flat)
+            q-btn(
+              :icon="item.icon"
+              @click="item.command()"
+              :class="{ 'text-primary': editor?.isActive(item.name) }"
+              dense
+            )
+    q-separator
+    q-bar.q-pr-none(bordered)
+      q-space
+      q-btn-group.q-mx-sm(flat)
         //- background color
         q-btn-dropdown(
           :color="editor?.getAttributes('textStyle')?.backgroundColor ? 'primary' : ''"
@@ -41,7 +63,7 @@
           template(#default)
             q-list
               q-item(
-                v-for="color in ['red', 'blue', 'green', 'yellow', 'purple', 'orange']" :key="color"
+                v-for="color in ['black', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'gray']" :key="color"
                 @click="editor?.chain().focus().setColor(color).run()"
                 clickable
                 dense
@@ -91,8 +113,8 @@
 
       q-btn-group.q-mx-sm(flat)
         q-btn-dropdown(
-          :color="editor?.getAttributes('heading').level ? 'primary' : ''"
-          :icon="!editor?.getAttributes('heading').level ? 'mdi-format-paragraph' : 'mdi-format-header-' + editor?.getAttributes('heading').level"
+          :color="editor?.getAttributes('heading')?.level ? 'primary' : ''"
+          :icon="!editor?.getAttributes('heading')?.level ? 'mdi-format-paragraph' : 'mdi-format-header-' + editor?.getAttributes('heading')?.level"
           auto-close
           dense
           flat
@@ -105,7 +127,7 @@
                 dense
               )
                 q-item-section
-                  q-item-label(:class="{ 'text-primary': !editor?.getAttributes('heading').level }")
+                  q-item-label(:class="{ 'text-primary': !editor?.getAttributes('heading')?.level }")
                     q-icon(name='mdi-format-paragraph')
               q-item(
                 v-for="level in 6" :key="level"
@@ -194,7 +216,14 @@
 </template>
 
 <script lang="ts">
-import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isObjectControl } from '@jsonforms/core'
+import {
+  ControlElement,
+  JsonFormsRendererRegistryEntry,
+  rankWith,
+  isObjectControl,
+  and,
+  optionIs,
+} from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { isEmpty } from 'radash'
 import { ControlWrapper } from '../common'
@@ -221,120 +250,131 @@ const controlRenderer = defineComponent({
   props: {
     ...rendererProps<ControlElement>(),
   },
-  data() {
-    return {
-      editor: ref<Editor | null>(null),
-
-      baseToolbar: [
-        { type: 'separator' },
-        {
-          type: 'group',
-          items: [
-            {
-              type: 'button',
-              name: 'bulletList',
-              icon: 'mdi-format-list-bulleted',
-              command: () => this.editor?.chain().focus().toggleBulletList().run(),
-            },
-            {
-              type: 'button',
-              name: 'orderedList',
-              icon: 'mdi-format-list-numbered',
-              command: () => this.editor?.chain().focus().toggleOrderedList().run(),
-            },
-          ],
-        },
-        { type: 'separator' },
-        {
-          type: 'group',
-          items: [
-            {
-              type: 'button',
-              name: 'clearFormatting',
-              icon: 'mdi-format-clear',
-              command: () => this.editor?.chain().focus().clearNodes().run(),
-            },
-            {
-              type: 'button',
-              name: 'bold',
-              icon: 'mdi-format-align-left',
-              command: () => this.editor?.chain().focus().setTextAlign('left').run(),
-            },
-            {
-              type: 'button',
-              name: 'center',
-              icon: 'mdi-format-align-center',
-              command: () => this.editor?.chain().focus().setTextAlign('center').run(),
-            },
-            {
-              type: 'button',
-              name: 'right',
-              icon: 'mdi-format-align-right',
-              command: () => this.editor?.chain().focus().setTextAlign('right').run(),
-            },
-          ],
-        },
-
-        { type: 'separator' },
-
-        {
-          type: 'group',
-          items: [
-            {
-              type: 'button',
-              name: 'bold',
-              icon: 'mdi-format-bold',
-              command: () => this.editor?.chain().focus().toggleBold().run(),
-            },
-            {
-              type: 'button',
-              name: 'italic',
-              icon: 'mdi-format-italic',
-              command: () => this.editor?.chain().focus().toggleItalic().run(),
-            },
-            {
-              type: 'button',
-              name: 'underline',
-              icon: 'mdi-format-underline',
-              command: () => this.editor?.chain().focus().toggleUnderline().run(),
-            },
-          ],
-        },
-
-        { type: 'separator' },
-
-        {
-          type: 'group',
-          items: [
-            {
-              type: 'button',
-              name: 'undo',
-              icon: 'mdi-undo',
-              command: () => this.editor?.chain().focus().undo().run(),
-              disabled: () => (this.editor ? !this.editor?.can().undo() : true),
-            },
-            {
-              type: 'button',
-              name: 'redo',
-              icon: 'mdi-redo',
-              command: () => this.editor?.chain().focus().redo().run(),
-              disabled: () => (this.editor ? !this.editor?.can().redo() : true),
-            },
-          ],
-        },
-      ],
-    }
-  },
   setup(props: RendererProps<ControlElement>) {
     const clearValue = determineClearValue(undefined)
-    const adaptTarget = (value) => (isEmpty(value) ? clearValue : value)
+    const adaptTarget = (value: unknown) => (isEmpty(value) ? clearValue : value)
     const input = useQuasarControl(useJsonFormsControl(props), adaptTarget, 100)
     const details = ref(false)
+    const editor = ref<Editor | null>(null)
+
+    type ToolbarButton = {
+      type: 'button'
+      name: string
+      icon: string
+      command: () => void
+      disabled?: () => boolean
+    }
+    type ToolbarGroup = {
+      type: 'group'
+      items: ToolbarButton[]
+    }
+    type ToolbarSeparator = { type: 'separator' }
+    type ToolbarItem = ToolbarSeparator | ToolbarGroup | ToolbarButton
+
+    const topToolbar: ToolbarItem[] = [
+      {
+        type: 'group',
+        items: [
+          {
+            type: 'button',
+            name: 'undo',
+            icon: 'mdi-undo',
+            command: () => editor.value?.chain().focus().undo().run(),
+            disabled: () => (editor.value ? !editor.value.can().undo() : true),
+          },
+          {
+            type: 'button',
+            name: 'redo',
+            icon: 'mdi-redo',
+            command: () => editor.value?.chain().focus().redo().run(),
+            disabled: () => (editor.value ? !editor.value.can().redo() : true),
+          },
+        ],
+      },
+    ]
+
+    const baseToolbar: ToolbarItem[] = [
+      { type: 'separator' },
+      {
+        type: 'group',
+        items: [
+          {
+            type: 'button',
+            name: 'bulletList',
+            icon: 'mdi-format-list-bulleted',
+            command: () => editor.value?.chain().focus().toggleBulletList().run(),
+          },
+          {
+            type: 'button',
+            name: 'orderedList',
+            icon: 'mdi-format-list-numbered',
+            command: () => editor.value?.chain().focus().toggleOrderedList().run(),
+          },
+        ],
+      },
+      { type: 'separator' },
+      {
+        type: 'group',
+        items: [
+          {
+            type: 'button',
+            name: 'clearFormatting',
+            icon: 'mdi-format-clear',
+            command: () => editor.value?.chain().focus().clearNodes().run(),
+          },
+          {
+            type: 'button',
+            name: 'bold',
+            icon: 'mdi-format-align-left',
+            command: () => editor.value?.chain().focus().setTextAlign('left').run(),
+          },
+          {
+            type: 'button',
+            name: 'center',
+            icon: 'mdi-format-align-center',
+            command: () => editor.value?.chain().focus().setTextAlign('center').run(),
+          },
+          {
+            type: 'button',
+            name: 'right',
+            icon: 'mdi-format-align-right',
+            command: () => editor.value?.chain().focus().setTextAlign('right').run(),
+          },
+        ],
+      },
+      { type: 'separator' },
+      {
+        type: 'group',
+        items: [
+          {
+            type: 'button',
+            name: 'bold',
+            icon: 'mdi-format-bold',
+            command: () => editor.value?.chain().focus().toggleBold().run(),
+          },
+          {
+            type: 'button',
+            name: 'italic',
+            icon: 'mdi-format-italic',
+            command: () => editor.value?.chain().focus().toggleItalic().run(),
+          },
+          {
+            type: 'button',
+            name: 'underline',
+            icon: 'mdi-format-underline',
+            command: () => editor.value?.chain().focus().toggleUnderline().run(),
+          },
+        ],
+      },
+    ]
 
     return {
       ...input,
       adaptTarget,
       details,
+      editor,
+      topToolbar,
+      baseToolbar,
     }
   },
   mounted() {
@@ -363,7 +403,7 @@ const controlRenderer = defineComponent({
   },
 
   beforeUnmount() {
-    this.editor.destroy()
+    this.editor?.destroy()
   },
 })
 
@@ -371,7 +411,7 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(2, isObjectControl),
+  tester: rankWith(2, and(isObjectControl, optionIs('wysiwyg', true))),
 }
 </script>
 
@@ -382,7 +422,7 @@ export const entry: JsonFormsRendererRegistryEntry = {
     padding: 0;
   }
   .q-field__control {
-    border-radius: 0 0 $editor-toolbar-padding $editor-toolbar-padding;
+    border-radius: 0 0 0.75rem 0.75rem;
   }
   .tiptap.ProseMirror {
     height: 100%;
@@ -398,5 +438,4 @@ export const entry: JsonFormsRendererRegistryEntry = {
 .q-field--auto-height .q-field__control-container {
   padding-top: 0 !important;
 }
-//@import url('https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&display=swap');
 </style>

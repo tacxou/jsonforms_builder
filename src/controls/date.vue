@@ -14,8 +14,8 @@
       @keyup.down.stop="keyupHandler($event, -1)"
       @update:model-value="onChangeDate"
       @focus="isFocused = true"
-      @blur="isFocused = false"
-      :id="control.id + '-input'"
+      @blur="onBlur"
+      :id="control.id"
       :model-value="controlData"
       :label="controlWrapper.label"
       :class="styles.control.input"
@@ -29,11 +29,10 @@
       :hide-hint="persistentHint()"
       :error="control.errors !== ''"
       :error-message="control.errors"
-      :maxlength="appliedOptions.restrict ? control.schema.maxLength : undefined"
       :clearable="isClearable"
       :debounce="100"
       inputmode="numeric"
-      :step="optionPattern.includes('s') ? 1 : 0"
+      :_step="optionPattern.includes('s') ? 1 : 0"
       :mask="maskPattern"
       outlined
       stack-label
@@ -57,8 +56,8 @@
                   v-bind="quasarProps('q-time')"
                   @update:model-value="onChangeDate"
                   :model-value="controlData"
+                  :with-seconds="optionPattern.includes('s')"
                   format24h
-                  with-seconds
                   square
                 )
         q-icon.cursor-pointer(v-else-if="inputType === 'date'" name="mdi-calendar")
@@ -78,6 +77,7 @@
               :model-value="controlData"
               :with-seconds="optionPattern.includes('s')"
               format24h
+              square
             )
 </template>
 
@@ -157,8 +157,113 @@ const controlRenderer = defineComponent({
     },
   },
   methods: {
+    onBlur() {
+      this.isFocused = false
+      console.log('controlData', this.controlData)
+
+      const normalized = this.normalizeValue(this.controlData)
+      const date = dayjs(normalized, this.patternDefault, true)
+
+      if (!date.isValid()) {
+        this.onChange(this.adaptTarget(undefined))
+        console.log('Invalid date on blur, clearing value', this.controlData)
+        return
+      }
+
+      // this.onChange(this.adaptTarget(this.controlData))
+    },
+    normalizeValue(value: string, pattern = this.patternDefault): string {
+      if (!value) {
+        return value
+      }
+
+      if (pattern === DEFAULT_TIME_FORMAT) {
+        const segments = value.split(':')
+        if (segments.length >= 2) {
+          const padded = segments.map((segment, index) => {
+            if (segment.length === 0) {
+              return segment
+            }
+
+            const targetLength = index === 0 ? 2 : 2
+            return segment.padStart(targetLength, '0')
+          })
+
+          if (padded.length === 2) {
+            padded.push('00')
+          }
+
+          return padded.slice(0, 3).join(':')
+        }
+
+        return value
+      }
+
+      if (pattern === DEFAULT_DATE_FORMAT) {
+        const segments = value.split('-')
+        if (segments.length === 3) {
+          const [year, month, day] = segments
+          const normalizedYear = year.length === 4 ? year : year.padStart(4, '0')
+          const normalizedMonth = month.length === 2 ? month : month.padStart(2, '0')
+          const normalizedDay = day.length === 2 ? day : day.padStart(2, '0')
+
+          return `${normalizedYear}-${normalizedMonth}-${normalizedDay}`
+        }
+
+        return value
+      }
+
+      if (pattern === DEFAULT_DATETIME_FORMAT) {
+        const [datePart, timePart] = value.split('T')
+        if (!timePart) {
+          return value
+        }
+
+        const normalizedDate = this.normalizeValue(datePart, DEFAULT_DATE_FORMAT)
+        const normalizedTime = this.normalizeValue(timePart, DEFAULT_TIME_FORMAT)
+
+        return `${normalizedDate}T${normalizedTime}`
+      }
+
+      return value
+    },
     onChangeDate(value: string) {
-      const date = dayjs(value, this.patternDefault, true)
+      // 1️⃣ Cas clear : l'utilisateur vide le champ -> on propage bien la valeur vide
+      if (isEmpty(value)) {
+        // adaptTarget va transformer "" en clearValue (null, undefined, peu importe ce que tu as configuré)
+        this.onChange(this.adaptTarget(value))
+        return
+      }
+
+      // 2️⃣ Tant que la saisie n'a pas rempli le pattern (mask), on ne fait RIEN
+      //    -> ça évite que "13:" ou "13:5" déclenchent une normalisation en "13:00"
+      const neededDigits = this.optionPattern.replace(/[^YMDHms]/g, '').length
+      const currentDigits = value.replace(/\D/g, '').length
+
+      console.log('aaaa', {
+        optpat: this.optionPattern.replace(/[^YMDHms]/g, ''),
+        curdig: value.replace(/\D/g, ''),
+      })
+
+      if (currentDigits < neededDigits) {
+        console.log('Waiting for complete input, current digits:', currentDigits, 'needed:', neededDigits)
+        return
+      }
+
+      console.log('Processing complete input value:', value)
+
+      // 3️⃣ Là seulement on normalise / parse / format
+      const normalized = this.normalizeValue(value)
+      const date = dayjs(normalized, this.optionPattern, true)
+
+      if (!date.isValid()) {
+        console.log('Invalid date entered, ignoring:', {
+          value,
+          normalized,
+          patternDefault: this.patternDefault,
+        })
+        return
+      }
 
       this.onChange(date.format(this.optionPattern))
       console.log('d', {
@@ -230,15 +335,22 @@ const controlRenderer = defineComponent({
 
       // Mapper le caractère de format vers l'unité dayjs
       switch (formatChar) {
-        case 'Y': return 'year'
-        case 'M': return 'month'
-        case 'D': return 'day'
-        case 'H': return 'hour'
-        case 'm': return 'minute'
-        case 's': return 'second'
-        default: return 'day' // fallback
+        case 'Y':
+          return 'year'
+        case 'M':
+          return 'month'
+        case 'D':
+          return 'day'
+        case 'H':
+          return 'hour'
+        case 'm':
+          return 'minute'
+        case 's':
+          return 'second'
+        default:
+          return 'day' // fallback
       }
-    }
+    },
   },
 })
 
@@ -246,7 +358,14 @@ export default controlRenderer
 
 export const entry: JsonFormsRendererRegistryEntry = {
   renderer: controlRenderer,
-  tester: rankWith(2, or(isDateControl, isDateTimeControl, isTimeControl)),
+  // prettier-ignore
+  tester: rankWith(2,
+    or(
+      isDateControl,
+      isDateTimeControl,
+      isTimeControl,
+    ),
+  ), // Matches schema properties with format "date", "date-time" or "time"
 }
 </script>
 
