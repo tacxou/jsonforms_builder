@@ -12,7 +12,7 @@ help:
 	@awk 'BEGIN { FS = ":.*##"; } /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 ncu: ## Check latest versions of all project dependencies
-	@npx npm-check-updates
+	@bunx npm-check-updates
 
 ncu-upgrade: ## Upgrade all project dependencies to the latest versions
-	@npx npm-check-updates -u
+	@bunx npm-check-updates -u
