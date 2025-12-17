@@ -28,11 +28,16 @@
       "require": "./dist/json-formbuilder.cjs.js"
     }
   },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "bunx vite build --config vite.config.ts",
     "start:dev": "cd playground && bunx vite --host",
-    "postbuild": "cpr README.md dist/README.md && cpr LICENSE dist/LICENSE && cpr package.json dist/package.json",
+    "posatbuild": "cpr README.md dist/README.md && cpr LICENSE dist/LICENSE && cpr package.json dist/package.json",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
