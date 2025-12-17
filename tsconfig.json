@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "es2022",
     "types": ["node"],
     "lib": ["es7"],
     "declaration": true,
@@ -11,10 +11,9 @@
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
-    "baseUrl": ".",
     "noLib": false,
     "incremental": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },

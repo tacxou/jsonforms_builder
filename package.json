@@ -29,12 +29,10 @@
     }
   },
   "scripts": {
-    "preinstall": "bunx only-allow bun",
     "prebuild": "rimraf dist",
     "build": "bunx vite build --config vite.config.ts",
-    "postbuild": "cpr README.md dist/README.md && cpr LICENSE dist/LICENSE && cpr package.json dist/package.json",
     "start:dev": "cd playground && bunx vite --host",
-    "preview": "bunx vite preview",
+    "postbuild": "cpr README.md dist/README.md && cpr LICENSE dist/LICENSE && cpr package.json dist/package.json",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
@@ -90,5 +88,6 @@
   "engines": {
     "node": ">=22.0.0",
     "bun": ">=1.0.0"
-  }
+  },
+  "packageManager": "bun@1.0.0"
 }
