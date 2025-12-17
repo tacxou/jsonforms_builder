@@ -40,4 +40,6 @@ bun run build
 bun test
 ```
 
+![Alt](https://repobeats.axiom.co/api/embed/a6c9d83d94634994e69a4302a2329c934a2cbcd6.svg "Repobeats analytics image")
+
 **Note importante :** Ce projet est configuré pour utiliser exclusivement Bun. L'utilisation de npm, yarn ou pnpm sera bloquée par le script `preinstall`.
