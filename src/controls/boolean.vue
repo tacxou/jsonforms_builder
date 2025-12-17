@@ -41,6 +41,7 @@ import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { useBooleanControl } from '../composables'
+import { QCheckbox, QField } from 'quasar'
 
 /**
  * BooleanControlRenderer Component
@@ -72,6 +73,8 @@ const controlRenderer = defineComponent({
   name: 'BooleanControlRenderer',
   components: {
     ControlWrapper,
+    QField,
+    QCheckbox,
   },
   props: {
     ...rendererProps<ControlElement>(),

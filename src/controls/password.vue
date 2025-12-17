@@ -42,19 +42,12 @@
 </template>
 
 <script lang="ts">
-import {
-  ControlElement,
-  JsonFormsRendererRegistryEntry,
-  rankWith,
-  isStringControl,
-  and,
-  formatIs,
-} from '@jsonforms/core'
+import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isStringControl, and, formatIs } from '@jsonforms/core'
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue } from '../utils'
-import { QInput } from 'quasar'
+import { QIcon, QInput } from 'quasar'
 import { usePasswordControl } from '../composables'
 
 const controlRenderer = defineComponent({
@@ -62,6 +55,7 @@ const controlRenderer = defineComponent({
   components: {
     ControlWrapper,
     QInput,
+    QIcon,
   },
   props: {
     ...rendererProps<ControlElement>(),

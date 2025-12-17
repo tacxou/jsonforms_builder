@@ -34,19 +34,12 @@
       :counter="counter"
       stack-label
       outlined
-      autogrowa
+      autogrow
     )
 </template>
 
 <script lang="ts">
-import {
-  ControlElement,
-  JsonFormsRendererRegistryEntry,
-  rankWith,
-  isStringControl,
-  and,
-  isMultiLineControl,
-} from '@jsonforms/core'
+import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isStringControl, and, isMultiLineControl } from '@jsonforms/core'
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'

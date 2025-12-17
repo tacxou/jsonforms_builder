@@ -46,13 +46,14 @@ import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, type RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue } from '../utils'
-import { QSlider } from 'quasar'
+import { QField, QSlider } from 'quasar'
 import { useSliderControl } from '../composables'
 
 const controlRenderer = defineComponent({
   name: 'slider-control-renderer',
   components: {
     ControlWrapper,
+    QField,
     QSlider,
   },
   props: {

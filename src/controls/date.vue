@@ -82,22 +82,14 @@
 </template>
 
 <script lang="ts">
-import {
-  ControlElement,
-  JsonFormsRendererRegistryEntry,
-  rankWith,
-  isDateControl,
-  or,
-  isDateTimeControl,
-  isTimeControl,
-} from '@jsonforms/core'
+import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isDateControl, or, isDateTimeControl, isTimeControl } from '@jsonforms/core'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { defineComponent } from 'vue'
 import { rendererProps, useJsonFormsControl, RendererProps } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue } from '../utils'
-import { QInput } from 'quasar'
+import { QCard, QDate, QIcon, QInput, QPopupProxy, QTime } from 'quasar'
 import { useDateControl } from '../composables'
 
 dayjs.extend(customParseFormat)
@@ -107,6 +99,11 @@ const controlRenderer = defineComponent({
   components: {
     ControlWrapper,
     QInput,
+    QIcon,
+    QPopupProxy,
+    QCard,
+    QTime,
+    QDate,
   },
   props: {
     ...rendererProps<ControlElement>(),

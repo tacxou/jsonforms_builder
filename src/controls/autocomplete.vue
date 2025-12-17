@@ -48,26 +48,22 @@
 </template>
 
 <script lang="ts">
-import {
-  ControlElement,
-  JsonFormsRendererRegistryEntry,
-  rankWith,
-  isStringControl,
-  and,
-  hasOption,
-  or,
-  isEnumControl,
-} from '@jsonforms/core'
+import { ControlElement, JsonFormsRendererRegistryEntry, rankWith, isStringControl, and, hasOption } from '@jsonforms/core'
 import { defineComponent } from 'vue'
 import { rendererProps, RendererProps, useJsonFormsEnumControl } from '@jsonforms/vue'
 import { ControlWrapper } from '../common'
 import { determineClearValue } from '../utils'
 import { useAutocompleteControl } from '../composables'
+import { QItem, QItemLabel, QItemSection, QSelect } from 'quasar'
 
 const controlRenderer = defineComponent({
   name: 'SuggestionControlRenderer',
   components: {
     ControlWrapper,
+    QSelect,
+    QItem,
+    QItemSection,
+    QItemLabel,
   },
   props: {
     ...rendererProps<ControlElement>(),

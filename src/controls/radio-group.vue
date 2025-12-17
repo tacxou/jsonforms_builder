@@ -43,7 +43,7 @@
 <script lang="ts">
 import { and, ControlElement, isEnumControl, JsonFormsRendererRegistryEntry, optionIs, rankWith } from '@jsonforms/core'
 import { rendererProps, RendererProps, useJsonFormsEnumControl } from '@jsonforms/vue'
-import { QInput } from 'quasar'
+import { QField, QOptionGroup } from 'quasar'
 import { defineComponent } from 'vue'
 import { determineClearValue } from '../utils'
 import { ControlWrapper } from '../common'
@@ -53,7 +53,8 @@ const controlRenderer = defineComponent({
   name: 'RadioGroupControlRenderer',
   components: {
     ControlWrapper,
-    QInput,
+    QField,
+    QOptionGroup,
   },
   props: {
     ...rendererProps<ControlElement>(),
