@@ -1,6 +1,6 @@
 {
   "name": "@tacxou/jsonforms_builder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Form Builder for JSONForms using Quasar Framework",
   "repository": "https://github.com/tacxou/jsonforms_builder.git",
   "author": "tacxou <12997062+tacxou@users.noreply.github.com> (https://github.com/tacxou)",
