@@ -1,4 +1,10 @@
-# @tacxou/jsonforms_builder
+# JSON Forms Builder
+
+[![CI](https://github.com/tacxou/jsonforms_builder/actions/workflows/ci.yml/badge.svg)](https://github.com/tacxou/jsonforms_builder/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/tacxou/jsonforms_builder/branch/main/graph/badge.svg)](https://codecov.io/gh/tacxou/jsonforms_builder)
+![NPM Version](https://img.shields.io/npm/v/@tacxou/jsonforms_builder)
+![NPM Downloads](https://img.shields.io/npm/dm/@tacxou/jsonforms_builder)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 ![JSONForms Builder banner](static/banner.jpg)
 
